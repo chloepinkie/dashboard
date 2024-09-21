@@ -1,22 +1,13 @@
-// src/theme.js
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
-    primary: {
-      main: '#FF0000', // Replace with exact brand red color hex
-    },
-    secondary: {
-      main: '#FFFFFF', // White
-    },
-    background: {
-      default: '#FFFFFF',
-    },
+    primary: { main: '#FF0000' }, // Brand red
+    secondary: { main: '#FFFFFF' }, // Brand white
   },
   typography: {
-    // Define brand-specific typography if needed
+    // Define custom typography
   },
-  // Additional customizations
 });
 
 export default theme;
