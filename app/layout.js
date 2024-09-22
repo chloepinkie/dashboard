@@ -1,3 +1,5 @@
+"use client";
+
 import { ThemeProvider } from '@mui/material/styles';
 import { SessionProvider } from 'next-auth/react';
 import { CssBaseline } from '@mui/material';
