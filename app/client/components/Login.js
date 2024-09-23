@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { TextField, Button, Typography, Box, CircularProgress } from '@mui/material';
-import { signIn } from 'next-auth/react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,14 +12,20 @@ export default function Login() {
     setMessage('');
 
     try {
-      const result = await signIn('email', { email, redirect: false });
-      if (result.error) {
-        setMessage('There was an error. Please try again.');
+      const response = await fetch('api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setMessage(data.message || 'Login successful. Please check your email for further instructions.');
       } else {
-        setMessage('Check your email for the login link!');
+        throw new Error(data.error || 'An error occurred');
       }
     } catch (error) {
-      setMessage('An unexpected error occurred. Please try again.');
+      console.error('Login error:', error);
+      setMessage(error.message || 'An unexpected error occurred. Please try again.');
     }
 
     setIsLoading(false);

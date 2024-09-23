@@ -1,9 +1,9 @@
-"use client";
+ "use client";
 
 import { Box, Container, Typography, Paper } from '@mui/material';
 import Image from "next/image";
-import Login from './components/Login';
-import ScrollingText from './components/ScrollingText';
+import Login from './client/components/Login';
+import ScrollingText from './client/components/ScrollingText';
 
 export default function Home() {
   return (
