@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { TextField, Button, Typography, Box, CircularProgress } from '@mui/material';
 
-export default function Login() {
+export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -12,19 +12,26 @@ export default function Login() {
     setMessage('');
 
     try {
-      const response = await fetch('api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
       const data = await response.json();
       if (response.ok) {
-        setMessage(data.message || 'Login successful. Please check your email for further instructions.');
+        if (data.isApproved) {
+          // User is approved, store the token and call the success callback
+          localStorage.setItem('authToken', data.token);
+          onLoginSuccess();
+        } else {
+          // User is not approved, show message
+          setMessage(data.message || 'Registration request sent. Please wait for admin approval.');
+        }
       } else {
         throw new Error(data.error || 'An error occurred');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login/Registration error:', error);
       setMessage(error.message || 'An unexpected error occurred. Please try again.');
     }
 
@@ -34,7 +41,7 @@ export default function Login() {
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
       <Typography variant="h6" gutterBottom>
-        Sign in or Register
+        Login or Register
       </Typography>
       <TextField
         fullWidth
@@ -55,7 +62,7 @@ export default function Login() {
         disabled={isLoading}
         sx={{ mt: 2, mb: 2 }}
       >
-        {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Continue with Email'}
+        {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Continue'}
       </Button>
       {message && (
         <Typography color="textSecondary" align="center">

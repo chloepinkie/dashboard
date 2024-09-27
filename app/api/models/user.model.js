@@ -9,8 +9,9 @@ const UserSchema = new mongoose.Schema({
   token: {
     type: String,
   },
-  tokenExpiresAt: {
-    type: Date,
+  isApproved: {
+    type: Boolean,
+    default: false,
   },
 });
 

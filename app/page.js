@@ -1,11 +1,18 @@
- "use client";
+"use client";
 
 import { Box, Container, Typography, Paper } from '@mui/material';
 import Image from "next/image";
 import Login from './client/components/Login';
 import ScrollingText from './client/components/ScrollingText';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
+
+  const handleLoginSuccess = () => {
+    router.push('/dashboard');
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Box component="header" sx={{ p: 2, bgcolor: 'background.paper', boxShadow: 1 }}>
@@ -26,7 +33,7 @@ export default function Home() {
           Created by Chloe :)
         </Typography>
         <Paper elevation={3} sx={{ p: 4, width: '100%', maxWidth: 400 }}>
-          <Login />
+          <Login onLoginSuccess={handleLoginSuccess} />
         </Paper>
       </Container>
       <Box component="footer" sx={{ bgcolor: 'primary.main' }}>
