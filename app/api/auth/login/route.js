@@ -1,8 +1,7 @@
 import { createTransport } from 'nodemailer';
 import { generateToken } from '@/lib/auth';
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
-import User from '@/app/api/models/user.model';
+import clientPromise from '@/lib/mongodb';
 
 export async function POST(req) {
   try {
@@ -14,10 +13,12 @@ export async function POST(req) {
     }
 
     // Connect to MongoDB
-    await dbConnect();
+    const client = await clientPromise;
+    const db = client.db();
+    const usersCollection = db.collection('users');
 
     // Check if user exists and is approved
-    let user = await User.findOne({ email });
+    let user = await usersCollection.findOne({ email });
 
     if (user && user.isApproved) {
       // User is approved, generate a new token for this session
@@ -32,10 +33,10 @@ export async function POST(req) {
     // If user doesn't exist or isn't approved, proceed with registration/approval process
     const token = await generateToken(email);
 
-    user = await User.findOneAndUpdate(
+    user = await usersCollection.findOneAndUpdate(
       { email },
-      { token, isApproved: false },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { $set: { email, token, isApproved: false } },
+      { upsert: true, returnDocument: 'after' }
     );
 
     // Send email to admin

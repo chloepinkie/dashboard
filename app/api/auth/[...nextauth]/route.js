@@ -4,7 +4,7 @@ import { MongoDBAdapter } from '@next-auth/mongodb-adapter';
 import clientPromise from '@/lib/mongodb';
 import { verifyToken } from '@/lib/auth';
 
-const handler = NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Email Link',
@@ -48,7 +48,9 @@ const handler = NextAuth({
   session: {
     strategy: 'jwt',
   },
-  secret: process.env.NEXTAUTH_SECRET, // Add this line
-});
+  secret: process.env.NEXTAUTH_SECRET,
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

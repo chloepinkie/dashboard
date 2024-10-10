@@ -4,46 +4,58 @@ import { useEffect, useState } from 'react';
 import { Typography, Box, Container, Paper, CircularProgress, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import Image from "next/image";
+import { useSession, signOut } from "next-auth/react";
 import ScrollingText from '../client/components/ScrollingText';
+import CSVUpload from '../components/CSVUpload';
+import DateRangeSelector from '../components/DateRangeSelector';
+import DataVisualizer from '../components/DataVisualizer';
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [csvData, setCSVData] = useState(null);
+  const [dateRange, setDateRange] = useState({ start: null, end: null });
   const router = useRouter();
+  const { data: session, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      router.push('/client/auth/signin');
+    },
+  });
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await fetch('/api/dashboard-data');
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        router.push('/auth/error?error=' + encodeURIComponent('Failed to fetch dashboard data'));
-      } finally {
-        setIsLoading(false);
-      }
+    if (status === "authenticated") {
+      fetchData();
     }
+  }, [status]);
 
-    fetchData();
-  }, [router]);
+  async function fetchData() {
+    try {
+      const response = await fetch('/api/dashboard-data');
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+      const result = await response.json();
+      setData(result);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      router.push('/client/auth/error?error=' + encodeURIComponent('Failed to fetch dashboard data'));
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   const handleLogout = async () => {
-    try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-      if (response.ok) {
-        router.push('/');
-      } else {
-        throw new Error('Logout failed');
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    await signOut({ redirect: false });
+    router.push('/');
+  };
+
+  const handleCSVUpload = (parsedData) => {
+    setCSVData(parsedData);
+  };
+
+  const handleDateRangeChange = (newDateRange) => {
+    setDateRange(newDateRange);
   };
 
   if (isLoading) {
@@ -80,10 +92,14 @@ export default function DashboardPage() {
           <Typography variant="h4" gutterBottom>
             Dashboard Overview
           </Typography>
-          {/* Add your SQL data visualizations here */}
-          <Typography variant="body1">
-            {JSON.stringify(data, null, 2)}
-          </Typography>
+          <CSVUpload onUpload={handleCSVUpload} />
+          <DateRangeSelector onChange={handleDateRangeChange} />
+          {csvData && (
+            <DataVisualizer 
+              data={csvData} 
+              dateRange={dateRange}
+            />
+          )}
         </Paper>
       </Container>
       <Box component="footer" sx={{ bgcolor: 'primary.main' }}>

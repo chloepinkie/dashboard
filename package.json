@@ -19,10 +19,11 @@
     "axios": "^1.7.7",
     "babel-eslint": "^10.1.0",
     "formidable": "^3.5.1",
-    "mongoose": "^8.6.3",
+    "mongoose": "^8.7.0",
     "next": "^14.2.13",
-    "next-auth": "^4.24.7",
+    "next-auth": "^4.24.8",
     "nodemailer": "^6.9.15",
+    "papaparse": "^5.4.1",
     "react": "^18",
     "react-dom": "^18",
     "recharts": "^2.12.7"

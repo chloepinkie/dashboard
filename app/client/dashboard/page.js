@@ -1,50 +1,71 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { Typography, Box, Container, Paper, CircularProgress, Button } from '@mui/material';
+import { useEffect, useState, useCallback } from 'react';
+import { Typography, Box, Container, Paper, CircularProgress, Button, Grid } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import Image from "next/image";
 import ScrollingText from '../components/ScrollingText';
+import DateRangeSelector from '../../components/DateRangeSelector';
+import SalesSection from '../../components/SalesSection';
+import AffiliateSection from '../../components/AffiliateSection';
+import CostSection from '../../components/CostSection';
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [dateRange, setDateRange] = useState(() => {
+    const end = new Date();
+    const start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
+    return {
+      start: start.toISOString().split('T')[0],
+      end: end.toISOString().split('T')[0]
+    };
+  });
   const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch('/api/dashboard-data');
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch('/api/dashboard-data', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
         if (!response.ok) {
           throw new Error('Failed to fetch dashboard data');
         }
+
         const result = await response.json();
         setData(result);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        router.push('/auth/error?error=' + encodeURIComponent('Failed to fetch dashboard data'));
+        router.push('/client/auth/error?error=' + encodeURIComponent(error.message));
       } finally {
         setIsLoading(false);
       }
     }
 
     fetchData();
+  }, [router, dateRange]);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('authToken');
+    router.push('/client/auth/signin');
   }, [router]);
 
-  const handleLogout = async () => {
-    try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-      if (response.ok) {
-        router.push('/');
-      } else {
-        throw new Error('Logout failed');
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  const handleSettings = useCallback(() => {
+    router.push('/client/settings');
+  }, [router]);
+
+  const handleDateRangeChange = useCallback((newDateRange) => {
+    setDateRange(newDateRange);
+  }, []);
 
   if (isLoading) {
     return (
@@ -63,28 +84,44 @@ export default function DashboardPage() {
           width={568/2}
           height={89/2}
         />
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleLogout}
-          sx={{ ml: 2 }}
-        >
-          Logout
-        </Button>
+        <Box>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={handleSettings}
+            sx={{ mr: 2 }}
+          >
+            Settings
+          </Button>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={handleLogout}
+          >
+            Logout
+          </Button>
+        </Box>
       </Box>
       <Container component="main" sx={{ flex: 1, py: 4 }}>
         <Typography variant="h2" component="h1" gutterBottom align="center">
           Left on Friday Data Dashboard
         </Typography>
-        <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-          <Typography variant="h4" gutterBottom>
-            Dashboard Overview
-          </Typography>
-          {/* Add your SQL data visualizations here */}
-          <Typography variant="body1">
-            {JSON.stringify(data, null, 2)}
-          </Typography>
-        </Paper>
+        <DateRangeSelector 
+          onChange={handleDateRangeChange} 
+          initialStartDate={dateRange.start}
+          initialEndDate={dateRange.end}
+        />
+        <Grid container spacing={3} sx={{ mt: 2 }}>
+          <Grid item xs={12}>
+            <SalesSection data={data} dateRange={dateRange} />
+          </Grid>
+          <Grid item xs={12}>
+            <AffiliateSection data={data} dateRange={dateRange} />
+          </Grid>
+          <Grid item xs={12}>
+            <CostSection data={data} dateRange={dateRange} />
+          </Grid>
+        </Grid>
       </Container>
       <Box component="footer" sx={{ bgcolor: 'primary.main' }}>
         <ScrollingText />
