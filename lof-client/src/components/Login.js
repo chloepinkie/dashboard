@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { TextField, Button, Typography, Box, CircularProgress } from '@mui/material';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
-export default function Login() {
+export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,7 +14,7 @@ export default function Login() {
     setMessage('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/login-or-register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -22,13 +22,12 @@ export default function Login() {
       const data = await response.json();
       if (response.ok) {
         if (data.isApproved) {
-          // User is approved, store the token and redirect to dashboard
           localStorage.setItem('authToken', data.token);
-          router.push('/client/dashboard');
+          onLoginSuccess(); // Call this instead of navigating directly
         } else {
           // User is not approved, show message and redirect to success page
           setMessage(data.message || 'Registration request sent. Please wait for admin approval.');
-          setTimeout(() => router.push('/client/auth/success'), 3000);
+          setTimeout(() => navigate('/auth/success'), 3000);
         }
       } else {
         throw new Error(data.error || 'An error occurred');

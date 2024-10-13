@@ -1,26 +1,25 @@
-"use client";
-
+import React from 'react';
 import { Box, Container, Typography, Paper } from '@mui/material';
-import Image from "next/image";
-import Login from './client/components/Login';
-import ScrollingText from './client/components/ScrollingText';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
+import Login from '../components/Login';
+import ScrollingText from '../components/ScrollingText';
+import LOFlogo from '../assets/logos/LOFlogo.png';
 
 export default function Home() {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleLoginSuccess = () => {
-    router.push('/dashboard');
+    navigate('/dashboard');
   };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Box component="header" sx={{ p: 2, bgcolor: 'background.paper', boxShadow: 1 }}>
-        <Image
-          src="/logos/LOFlogo.png"
+      <Box component="header" sx={{ p: 2, bgcolor: 'background.paper', boxShadow: 0 }}>
+        <img
+          src={LOFlogo}
           alt="Left On Friday Logo"
-          width={568/2}
-          height={89/2}
+          width={284}
+          height={44.5}
         />
       </Box>
       <Container component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', py: 4 }}>

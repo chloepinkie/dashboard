@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { Box, Button } from '@mui/material';
+import { Box, Button, TextField } from '@mui/material';
 import dayjs from 'dayjs';
 
 export default function DateRangeSelector({ onChange }) {
@@ -16,7 +16,7 @@ export default function DateRangeSelector({ onChange }) {
     setStartDate(start);
     setEndDate(end);
     onChange({ start: start.format('YYYY-MM-DD'), end: end.format('YYYY-MM-DD') });
-  }, [onChange]);
+  }, []);
 
   const handleDateChange = (newValue, isStart) => {
     if (isStart) {
@@ -49,11 +49,13 @@ export default function DateRangeSelector({ onChange }) {
             label="Start Date"
             value={startDate}
             onChange={(newValue) => handleDateChange(newValue, true)}
+            renderInput={(params) => <TextField {...params} />}
           />
           <DatePicker
             label="End Date"
             value={endDate}
             onChange={(newValue) => handleDateChange(newValue, false)}
+            renderInput={(params) => <TextField {...params} />}
           />
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>

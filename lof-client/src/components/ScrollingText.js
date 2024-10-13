@@ -1,7 +1,7 @@
+import React, { useEffect, useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { keyframes } from '@mui/system';
-import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import swim from '../assets/logos/swim.png';
 
 const scroll = keyframes`
   0% { transform: translateX(0); }
@@ -30,7 +30,7 @@ export default function ScrollingText() {
       >
         Have a nice swim
       </Typography>
-      <Image src="/logos/swim.png" alt="Swim" width={24} height={24} style={{ marginRight: '16px' }} />
+      <img src={swim} alt="Swim" width={24} height={24} style={{ marginRight: '16px' }} />
     </>
   );
 
