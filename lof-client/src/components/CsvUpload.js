@@ -5,49 +5,56 @@ import Papa from 'papaparse';
 export default function CSVUpload({ onUpload }) {
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [lastUploadTimestamp, setLastUploadTimestamp] = useState(0);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
   const handleUpload = useCallback(() => {
-    const now = Date.now();
-    if (file && !isUploading && now - lastUploadTimestamp > 5000) {
+    if (file && !isUploading) {
       setIsUploading(true);
-      setLastUploadTimestamp(now);
       
       Papa.parse(file, {
         complete: async (result) => {
           try {
-            console.log('Sending CSV data to server');
-            const response = await fetch('/api/upload-csv', {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/upload/upload-csv`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
               },
-              body: JSON.stringify({ data: result.data }),
+              body: JSON.stringify({ 
+                data: result.data,
+                fileName: file.name
+              }),
             });
 
             if (!response.ok) {
-              throw new Error('Failed to upload CSV data');
+              const errorData = await response.json();
+              throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
             }
 
-            const uploadedData = await response.json();
-            console.log('CSV upload response:', uploadedData);
-            onUpload(uploadedData);
+            const data = await response.json();
+            console.log('CSV upload response:', data);
+            onUpload(data, true, data.message || 'CSV uploaded successfully');
           } catch (error) {
             console.error('Error uploading CSV:', error);
-            // Handle error (e.g., show error message to user)
+            onUpload(null, false, error.message || 'Failed to upload CSV. Please try again.');
           } finally {
             setIsUploading(false);
-            setFile(null); // Reset file after upload
+            setFile(null);
           }
         },
         header: true,
+        skipEmptyLines: true,
+        error: (error) => {
+          console.error('Error parsing CSV:', error);
+          onUpload(null, false, 'Failed to parse CSV. Please check the file format.');
+          setIsUploading(false);
+        },
       });
     }
-  }, [file, isUploading, lastUploadTimestamp, onUpload]);
+  }, [file, isUploading, onUpload]);
 
   return (
     <div>

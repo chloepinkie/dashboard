@@ -1,86 +1,98 @@
-"use client";
+import React, { useState } from 'react';
+import { Typography, Box, Button, Divider, IconButton, Snackbar } from '@mui/material';
+import MuiAlert from '@mui/material/Alert';
+import CloseIcon from '@mui/icons-material/Close';
+import CSVUpload from './CsvUpload';
 
-import { useState } from 'react';
-import { Typography, Box, Container, Paper, Button } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import Image from "next/image";
-import CSVUpload from '../../../nodejs/lof-client/src/components/CsvUpload';
-import ScrollingText from '../../../nodejs/lof-client/src/components/ScrollingText';
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
-export default function SettingsPage() {
-  const [csvData, setCSVData] = useState(null);
-  const router = useRouter();
+export default function Settings({ onClose, onUpload }) {
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
-  const handleCSVUpload = async (parsedData) => {
-    setCSVData(parsedData);
-    try {
-      const response = await fetch('/api/upload-csv', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(parsedData),
+  const handleCSVUpload = async (uploadedData, success, message) => {
+    if (success) {
+      console.log('CSV data uploaded:', uploadedData);
+      setSnackbar({
+        open: true,
+        message: message || 'CSV uploaded successfully',
+        severity: 'success'
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload CSV data');
-      }
-
-      const result = await response.json();
-      alert(result.message);
-
-      // Still store in localStorage for immediate use
-      localStorage.setItem('csvData', JSON.stringify(parsedData));
-    } catch (error) {
-      console.error('Error uploading CSV data:', error);
-      alert('Failed to upload CSV data. Please try again.');
+      onUpload(); // Refresh dashboard data
+    } else {
+      setSnackbar({
+        open: true,
+        message: message || 'Failed to upload CSV',
+        severity: 'error'
+      });
     }
   };
 
-  const handleBack = () => {
-    router.push('/client/dashboard');
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Box component="header" sx={{ p: 2, bgcolor: 'background.paper', boxShadow: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Image
-          src="/logos/LOFlogo.png"
-          alt="Left On Friday Logo"
-          width={568/2}
-          height={89/2}
-        />
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleBack}
-          sx={{ ml: 2 }}
-        >
-          Back to Dashboard
-        </Button>
-      </Box>
-      <Container component="main" sx={{ flex: 1, py: 4 }}>
-        <Typography variant="h2" component="h1" gutterBottom align="center">
+    <Box sx={{ 
+      width: '100%', 
+      maxWidth: 500, 
+      bgcolor: 'background.paper', 
+      borderRadius: 2, 
+      p: 3 
+    }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h4" component="h2">
           Settings
         </Typography>
-        <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-          <Typography variant="h4" gutterBottom>
-            Upload CSV Data
-          </Typography>
-          <CSVUpload onUpload={handleCSVUpload} />
-          {csvData && (
-            <Typography variant="body2" sx={{ mt: 2 }}>
-              CSV data uploaded successfully! {csvData.length} rows processed.
-            </Typography>
-          )}
-        </Paper>
-      </Container>
-      <Box component="footer" sx={{ bgcolor: 'primary.main' }}>
-        <ScrollingText />
-        <Typography align="center" sx={{ p: 2, color: 'primary.contrastText' }}>
-          © 2024 Left On Friday. All rights reserved.
-        </Typography>
+        <IconButton onClick={onClose} aria-label="close">
+          <CloseIcon />
+        </IconButton>
       </Box>
+      <Divider sx={{ mb: 3 }} />
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Upload CSV Data
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Upload your CSV file to update the dashboard data.
+        </Typography>
+        <CSVUpload onUpload={handleCSVUpload} />
+      </Box>
+      <Divider sx={{ mb: 3 }} />
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button onClick={onClose} variant="contained" color="primary">
+          Close
+        </Button>
+      </Box>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{
+          width: '100%',
+          '& .MuiSnackbarContent-root': {
+            width: '100%',
+            maxWidth: '600px',
+          },
+        }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity} 
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

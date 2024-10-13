@@ -1,17 +1,20 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Typography, Box, Container, Paper, CircularProgress, Button } from '@mui/material';
+import { Typography, Box, Container, Paper, CircularProgress, Button, Modal } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import ScrollingText from '../components/ScrollingText';
-import CSVUpload from '../components/CsvUpload';
+import Footer from '../components/Footer';
 import DateRangeSelector from '../components/DateRangeSelector';
 import DataVisualizer from '../components/DataVisualizer';
+import Settings from '../components/Settings';
+import LOFlogo from '../assets/logos/LOFlogo.png';
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [dateRange, setDateRange] = useState({ start: null, end: null });
   const [error, setError] = useState(null);
+  const [openSettings, setOpenSettings] = useState(false);
   const navigate = useNavigate();
+
   const fetchData = useCallback(async () => {
     if (!dateRange.start || !dateRange.end) return;
 
@@ -24,7 +27,7 @@ export default function DashboardPage() {
         throw new Error('No authentication token found');
       }
 
-      const url = new URL(`${process.env.REACT_APP_API_URL}/api/dashboard-data`);
+      const url = new URL(`${process.env.REACT_APP_API_URL}/api/dashboard-data}`);
       url.searchParams.append('startDate', dateRange.start);
       url.searchParams.append('endDate', dateRange.end);
 
@@ -67,12 +70,18 @@ export default function DashboardPage() {
     navigate('/');
   };
 
+  const handleOpenSettings = () => setOpenSettings(true);
+  const handleCloseSettings = () => setOpenSettings(false);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Header */}
       <Box component="header" sx={{ p: 2, bgcolor: 'background.paper', boxShadow: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <img src="/logos/LOFlogo.png" alt="Left On Friday Logo" width={284} height={44.5} />
-        <Button variant="contained" color="primary" onClick={handleLogout} sx={{ ml: 2 }}>Logout</Button>
+        <img src={LOFlogo} alt="Left On Friday Logo" width={284} height={44.5} />
+        <Box>
+          <Button onClick={handleOpenSettings} sx={{ mr: 2 }}>Settings</Button>
+          <Button variant="contained" color="primary" onClick={handleLogout}>Logout</Button>
+        </Box>
       </Box>
 
       {/* Main Content */}
@@ -82,7 +91,6 @@ export default function DashboardPage() {
         </Typography>
         <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
           <Typography variant="h4" gutterBottom>Dashboard Overview</Typography>
-          <CSVUpload onUpload={fetchData} />
           <DateRangeSelector onChange={handleDateRangeChange} />
           {isLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
@@ -96,13 +104,30 @@ export default function DashboardPage() {
         </Paper>
       </Container>
 
+      {/* Settings Modal */}
+      <Modal
+        open={openSettings}
+        onClose={handleCloseSettings}
+        aria-labelledby="settings-modal"
+        aria-describedby="settings-modal-description"
+      >
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 0,
+          outline: 'none',
+          borderRadius: 2,
+        }}>
+          <Settings onClose={handleCloseSettings} onUpload={fetchData} />
+        </Box>
+      </Modal>
+
       {/* Footer */}
-      <Box component="footer" sx={{ bgcolor: 'primary.main' }}>
-        <ScrollingText />
-        <Typography align="center" sx={{ p: 2, color: 'primary.contrastText' }}>
-          © 2024 Left On Friday. All rights reserved.
-        </Typography>
-      </Box>
+      <Footer />
     </Box>
   );
 }

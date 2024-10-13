@@ -1,34 +1,33 @@
-import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
-import dbConnect from '@/lib/mongoose';
-import CsvData from '@/app/api/models/csvdata.model';
+const jwt = require('jsonwebtoken');
+const CsvData = require('../models/csvdata.model');
 
-export async function GET(req) {
+// Helper function to verify JWT token
+const verifyToken = (token) => {
+  return jwt.verify(token, process.env.JWT_SECRET);
+};
+
+exports.getDashboardData = async (req, res) => {
   try {
-    const authHeader = req.headers.get('authorization');
+    const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Missing or invalid authorization header' }, { status: 401 });
+      return res.status(401).json({ error: 'Missing or invalid authorization header' });
     }
 
     const token = authHeader.split(' ')[1];
-    const email = await verifyToken(token);
+    const email = verifyToken(token);
 
     if (!email) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
-    const { searchParams } = new URL(req.url);
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    const { startDate, endDate } = req.query;
 
     console.log('Received date range:', { startDate, endDate });
-
-    await dbConnect();
 
     const csvData = await CsvData.findOne().sort({ uploadedAt: -1 }).lean();
 
     if (!csvData) {
-      return NextResponse.json({ error: 'No CSV data found' }, { status: 404 });
+      return res.status(404).json({ error: 'No CSV data found' });
     }
 
     const filteredData = csvData.processedData.filter(row => {
@@ -37,12 +36,14 @@ export async function GET(req) {
              (!endDate || rowDate <= new Date(endDate));
     });
 
-    return NextResponse.json(filteredData);
+    const processedData = processCSVData(filteredData, startDate, endDate);
+
+    res.json(processedData);
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    return NextResponse.json({ error: 'An error occurred while fetching dashboard data' }, { status: 500 });
+    res.status(500).json({ error: 'An error occurred while fetching dashboard data' });
   }
-}
+};
 
 function processCSVData(data, startDate, endDate) {
   // Convert start and end dates to Date objects
@@ -153,3 +154,7 @@ function processCSVData(data, startDate, endDate) {
 
   return result;
 }
+
+module.exports = {
+  getDashboardData: exports.getDashboardData
+};

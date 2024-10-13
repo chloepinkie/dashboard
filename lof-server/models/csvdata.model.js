@@ -1,6 +1,7 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const CsvDataSchema = new mongoose.Schema({
+  fileName: String,
   rawData: [mongoose.Schema.Types.Mixed],
   processedData: [{
     name: String,
@@ -12,12 +13,11 @@ const CsvDataSchema = new mongoose.Schema({
     orderVolume: Number,
     commissionsEarned: Number,
     estimatedMediaValue: Number,
-    firstLinked: { type: Date, default: null }
+    firstLinked: String
   }],
   uploadedAt: { type: Date, default: Date.now }
 });
 
-// Check if the model already exists to prevent recompilation
-const CsvData = mongoose.models.CsvData || mongoose.model('CsvData', CsvDataSchema, 'csvdata');
+const CsvData = mongoose.model('CsvData', CsvDataSchema, 'csvdata');
 
-export default CsvData;
+module.exports = CsvData;

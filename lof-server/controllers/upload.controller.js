@@ -1,19 +1,21 @@
-import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongoose';
-import CsvData from '@/app/api/models/csvdata.model';
+const CsvData = require('../models/csvdata.model');
 
 function parseDate(dateString) {
   if (!dateString) return null;
   
-  // Try parsing as MM/DD/YYYY
+  // Try parsing as MM/DD/YYYY or DD/MM/YYYY
   const date = new Date(dateString);
-  if (!isNaN(date.getTime())) return date;
+  if (!isNaN(date.getTime())) {
+    return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+  }
 
-  // Try parsing as DD/MM/YYYY
+  // If parsing fails, try DD/MM/YYYY format
   const parts = dateString.split('/');
   if (parts.length === 3) {
     const newDate = new Date(parts[2], parts[1] - 1, parts[0]);
-    if (!isNaN(newDate.getTime())) return newDate;
+    if (!isNaN(newDate.getTime())) {
+      return newDate.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+    }
   }
 
   // If all parsing attempts fail, return null
@@ -21,18 +23,22 @@ function parseDate(dateString) {
   return null;
 }
 
-export async function POST(req) {
+exports.uploadCSV = async (req, res) => {
   console.log('Received CSV upload request');
   try {
-    const body = await req.json();
-    const { data } = body;
+    const { data, fileName } = req.body;
 
-    if (!data || !Array.isArray(data)) {
-      console.log('Invalid data format');
-      return NextResponse.json({ error: 'Invalid data format' }, { status: 400 });
+    if (!data || !Array.isArray(data) || !fileName) {
+      console.log('Invalid data format or missing filename');
+      return res.status(400).json({ error: 'Invalid data format or missing filename' });
     }
 
-    await dbConnect();
+    // Check if a file with the same name already exists
+    const existingFile = await CsvData.findOne({ fileName: fileName });
+    if (existingFile) {
+      console.log('File with the same name already exists');
+      return res.status(409).json({ error: 'A file with this name already exists.' });
+    }
 
     // Check if a CSV was uploaded in the last 5 seconds
     const recentUpload = await CsvData.findOne({
@@ -41,7 +47,7 @@ export async function POST(req) {
 
     if (recentUpload) {
       console.log('Duplicate upload detected');
-      return NextResponse.json({ 
+      return res.json({ 
         message: 'CSV data already uploaded recently', 
         data: recentUpload.processedData 
       });
@@ -64,6 +70,7 @@ export async function POST(req) {
 
     // Create a new CsvData document
     const newCsvData = new CsvData({
+      fileName: fileName,
       rawData: data,
       processedData: processedData,
       uploadedAt: new Date()
@@ -75,15 +82,19 @@ export async function POST(req) {
 
     console.log('CSV data saved successfully');
 
-    return NextResponse.json({ 
+    return res.json({ 
       message: 'CSV data uploaded and saved successfully', 
       data: processedData 
     });
   } catch (error) {
     console.error('Error uploading CSV:', error);
-    return NextResponse.json({ 
+    return res.status(500).json({ 
       error: 'An error occurred while uploading and saving the CSV', 
       details: error.message 
-    }, { status: 500 });
+    });
   }
-}
+};
+
+module.exports = {
+  uploadCSV: exports.uploadCSV
+};
