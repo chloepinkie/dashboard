@@ -30,7 +30,8 @@ exports.loginOrRegister = async (req, res) => {
       return res.json({ 
         message: 'Login successful', 
         token,
-        isApproved: true 
+        isApproved: true,
+        userType: user.userType
       });
     }
 

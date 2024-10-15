@@ -3,19 +3,15 @@ const CsvData = require('../models/csvdata.model');
 function parseDate(dateString) {
   if (!dateString) return null;
   
-  // Try parsing as MM/DD/YYYY or DD/MM/YYYY
+  // Try parsing as MM/DD/YYYY
   const date = new Date(dateString);
-  if (!isNaN(date.getTime())) {
-    return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD
-  }
+  if (!isNaN(date.getTime())) return date;
 
-  // If parsing fails, try DD/MM/YYYY format
+  // Try parsing as DD/MM/YYYY
   const parts = dateString.split('/');
   if (parts.length === 3) {
     const newDate = new Date(parts[2], parts[1] - 1, parts[0]);
-    if (!isNaN(newDate.getTime())) {
-      return newDate.toISOString().split('T')[0]; // Returns YYYY-MM-DD
-    }
+    if (!isNaN(newDate.getTime())) return newDate;
   }
 
   // If all parsing attempts fail, return null

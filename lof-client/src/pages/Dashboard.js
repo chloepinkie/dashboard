@@ -27,7 +27,7 @@ export default function DashboardPage() {
         throw new Error('No authentication token found');
       }
 
-      const url = new URL(`${process.env.REACT_APP_API_URL}/api/dashboard-data}`);
+      const url = new URL(`${process.env.REACT_APP_API_URL}/api/data/dashboard-data`);
       url.searchParams.append('startDate', dateRange.start);
       url.searchParams.append('endDate', dateRange.end);
 
@@ -73,13 +73,15 @@ export default function DashboardPage() {
   const handleOpenSettings = () => setOpenSettings(true);
   const handleCloseSettings = () => setOpenSettings(false);
 
+  const userType = localStorage.getItem('userType');
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Header */}
       <Box component="header" sx={{ p: 2, bgcolor: 'background.paper', boxShadow: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <img src={LOFlogo} alt="Left On Friday Logo" width={284} height={44.5} />
         <Box>
-          <Button onClick={handleOpenSettings} sx={{ mr: 2 }}>Settings</Button>
+          {userType === 'admin' && <Button onClick={handleOpenSettings} sx={{ mr: 2 }}>Settings</Button>}
           <Button variant="contained" color="primary" onClick={handleLogout}>Logout</Button>
         </Box>
       </Box>
@@ -87,7 +89,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <Container component="main" sx={{ flex: 1, py: 4 }}>
         <Typography variant="h2" component="h1" gutterBottom align="center">
-          Left on Friday Data Dashboard
+          Your Data Dashboard
         </Typography>
         <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
           <Typography variant="h4" gutterBottom>Dashboard Overview</Typography>

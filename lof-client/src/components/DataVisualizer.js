@@ -21,6 +21,11 @@ export default function DataVisualizer({ data, dateRange }) {
     </Paper>
   );
 
+  const truncateName = (name, maxLength = 15) => {
+    if (name.length <= maxLength) return name;
+    return name.substr(0, maxLength - 3) + '...';
+  };
+
   return (
     <Box>
       <Typography variant="body2" color="textSecondary">
@@ -85,12 +90,31 @@ export default function DataVisualizer({ data, dateRange }) {
             <BarChart data={topAffiliates} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
-              <YAxis dataKey="name" type="category" />
+              <YAxis 
+                dataKey="name" 
+                type="category" 
+                width={100}
+                tickFormatter={(value) => truncateName(value)}
+              />
               <Tooltip 
-                formatter={(value, name, props) => [
-                  `$${value.toFixed(2)}`, 
-                  `Order Volume (${props.payload.instagram || 'N/A'})`
-                ]}
+                formatter={(value, name, props) => {
+                  return [
+                    `$${value.toFixed(2)}`,
+                    'Order Volume'
+                  ];
+                }}
+                labelFormatter={(label, payload) => {
+                  if (payload && payload[0]) {
+                    return (
+                      <div>
+                        <strong>Name:</strong> {payload[0].payload.name}<br />
+                        <strong>Instagram:</strong> {payload[0].payload.instagram || 'N/A'}<br />
+                      </div>
+                    );
+                  }
+                  return label;
+                }}
+                wrapperStyle={{ zIndex: 1000 }} // Add this line to increase z-index
               />
               <Legend />
               <Bar dataKey="orderVolume" fill="#8884d8" name="Order Volume" />

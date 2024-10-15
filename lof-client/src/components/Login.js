@@ -23,6 +23,7 @@ export default function Login({ onLoginSuccess }) {
       if (response.ok) {
         if (data.isApproved) {
           localStorage.setItem('authToken', data.token);
+          localStorage.setItem('userType', data.userType);
           onLoginSuccess(); // Call this instead of navigating directly
         } else {
           // User is not approved, show message and redirect to success page

@@ -36,6 +36,9 @@ exports.getDashboardData = async (req, res) => {
              (!endDate || rowDate <= new Date(endDate));
     });
 
+    console.log('Filtered data count:', filteredData.length);
+    console.log('Sample filtered data:', filteredData.slice(0, 5));
+
     const processedData = processCSVData(filteredData, startDate, endDate);
 
     res.json(processedData);
