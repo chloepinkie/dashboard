@@ -1,6 +1,17 @@
 import { Card, CardContent, Typography, Grid } from '@mui/material';
+import { formatNumber } from '../utils/numberFormat';
 
 export default function AffiliateSection({ data }) {
+  const renderValue = (value, unit = '') => {
+    if (unit === '%') {
+      return `${formatNumber(value, 'decimal', 2)}%`;
+    } else if (unit === '$') {
+      return `${formatNumber(value, 'currency', 2)}`;
+    } else {
+      return formatNumber(value, 'decimal', 0);
+    }
+  };
+
   return (
     <Card>
       <CardContent>
@@ -8,39 +19,39 @@ export default function AffiliateSection({ data }) {
         <Grid container spacing={2}>
           <Grid item xs={4}>
             <Typography variant="subtitle1">Total Affiliates</Typography>
-            <Typography variant="h6">{data.totalAffiliates || 0}</Typography>
+            <Typography variant="h6">{renderValue(data.totalAffiliates)}</Typography>
           </Grid>
           <Grid item xs={4}>
             <Typography variant="subtitle1">New Affiliates</Typography>
-            <Typography variant="h6">{data.newAffiliates || 0}</Typography>
+            <Typography variant="h6">{renderValue(data.newAffiliates)}</Typography>
           </Grid>
           <Grid item xs={4}>
             <Typography variant="subtitle1">Affiliates Creating Sales</Typography>
-            <Typography variant="h6">{data.affiliatesCreatingSales || 0}</Typography>
+            <Typography variant="h6">{renderValue(data.affiliatesCreatingSales)}</Typography>
           </Grid>
           <Grid item xs={4}>
             <Typography variant="subtitle1">% of Affiliate Creating Sales</Typography>
-            <Typography variant="h6">{data.percentAffiliatesCreatingSales || 0}%</Typography>
+            <Typography variant="h6">{renderValue(data.percentAffiliatesCreatingSales, '%')}</Typography>
           </Grid>
           <Grid item xs={4}>
-            <Typography variant="subtitle1">Avg GS-D per Active Affiliate</Typography>
-            <Typography variant="h6">{data.avgGSDPerActiveAffiliate || 0}</Typography>
+            <Typography variant="subtitle1">Avg Gross Sales per Active Affiliate</Typography>
+            <Typography variant="h6">{renderValue(data.avgGSDPerActiveAffiliate, '$')}</Typography>
           </Grid>
           <Grid item xs={4}>
             <Typography variant="subtitle1">Avg Clicks per Active Affiliate</Typography>
-            <Typography variant="h6">{data.avgClicksPerActiveAffiliate || 0}</Typography>
+            <Typography variant="h6">{renderValue(data.avgClicksPerActiveAffiliate)}</Typography>
           </Grid>
           <Grid item xs={4}>
             <Typography variant="subtitle1">Mentions</Typography>
-            <Typography variant="h6">{data.mentions || 0}</Typography>
+            <Typography variant="h6">{renderValue(data.mentions)}</Typography>
           </Grid>
           <Grid item xs={4}>
-            <Typography variant="subtitle1">Clicks</Typography>
-            <Typography variant="h6">{data.clicks || 0}</Typography>
+            <Typography variant="subtitle1">Clicks (ShopMy calls this "Views")</Typography>
+            <Typography variant="h6">{renderValue(data.clicks)}</Typography>
           </Grid>
           <Grid item xs={4}>
-            <Typography variant="subtitle1">EMV</Typography>
-            <Typography variant="h6">${data.emv || 0}</Typography>
+            <Typography variant="subtitle1">Ignore for now - Redo to Calc EMV for LOF</Typography>
+            <Typography variant="h6">{renderValue(data.emv, '$')}</Typography>
           </Grid>
         </Grid>
       </CardContent>

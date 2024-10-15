@@ -12,7 +12,7 @@ export default function DateRangeSelector({ onChange }) {
   useEffect(() => {
     // Set default date range to last 7 days
     const end = dayjs();
-    const start = end.subtract(7, 'day');
+    const start = end.subtract(8, 'day');
     setStartDate(start);
     setEndDate(end);
     onChange({ start: start.format('YYYY-MM-DD'), end: end.format('YYYY-MM-DD') });

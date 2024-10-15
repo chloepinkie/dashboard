@@ -1,7 +1,9 @@
 const fetch = require('node-fetch');
 const CsvData = require('../models/csvdata.model');
 
-async function getShopMyToken(userId, password) {
+async function getShopMyToken() {
+  const userId = process.env.SHOPMY_USER;
+  const password = process.env.SHOPMY_PASS;
   const authUrl = 'https://api.shopmy.us/api/auth/login';
   try {
     console.log('Attempting to get ShopMy token...');
@@ -48,14 +50,9 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-exports.scrapeShopmyAndSave2Db = async (req, res) => {
-  const { userId, password } = req.body;
-  if (!userId || !password) {
-    return res.status(400).json({ error: 'UserId and password are required' });
-  }
-
+exports.scrapeShopmyAndSave2DbRecent = async (req, res) => {
   try {
-    const token = await getShopMyToken(userId, password);
+    const token = await getShopMyToken();
     const today = new Date();
     const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
 
@@ -122,41 +119,52 @@ exports.scrapeShopmyAndSave2Db = async (req, res) => {
 };
 
 exports.scrapeShopmyAndSave2DbAll = async (req, res) => {
-  const { userId, password } = req.body;
-  if (!userId || !password) {
-    return res.status(400).json({ error: 'UserId and password are required' });
+  const { token } = req.body;
+  if (!token) {
+    return res.status(400).json({ error: 'Token is required' });
   }
-
   // Start the scraping process in the background
-  scrapeShopmyDataForAllDays(userId, password)
-    .then(() => console.log('Finished scraping all ShopMy data'))
-    .catch(error => console.error('Error scraping all ShopMy data:', error));
+  scrapeShopmyDataForAllDays(token)
+    .then(() => res.json({ message: 'Finished scraping all ShopMy data' }))
+    .catch(error => res.status(500).json({ error: 'Error scraping all ShopMy data', details: error.message }));
 
   // Immediately return a response to the client
-  res.json({ message: 'Started scraping all ShopMy data. This may take a while.' });
+  // res.json({ message: 'Started scraping all ShopMy data. This may take a while.' });
 };
 
-async function scrapeShopmyDataForAllDays(userId, password) {
+async function scrapeShopmyDataForAllDays(token) {
   try {
-    const token = await getShopMyToken(userId, password);
+    //const token = await getShopMyToken();
     const today = new Date();
     const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
 
+    // Generate all file names and dates for the year
+    const allDates = [];
     let currentDate = new Date(oneYearAgo);
-
     while (currentDate <= today) {
       const dateString = currentDate.toISOString().split('T')[0];
-      const fileName = `shopmy_report_${dateString}.json`;
+      allDates.push({
+        date: dateString,
+        fileName: `shopmy_report_${dateString}.json`
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
 
-      // Check if data for this date already exists
-      const existingFile = await CsvData.findOne({ fileName: fileName });
-      if (!existingFile) {
-        const data = await fetchShopMyData(token, dateString);
+    // Batch check for existing files
+    const existingFiles = await CsvData.find(
+      { fileName: { $in: allDates.map(d => d.fileName) } },
+      'fileName'
+    );
+    const existingFileSet = new Set(existingFiles.map(file => file.fileName));
+
+    for (const { date, fileName } of allDates) {
+      if (!existingFileSet.has(fileName)) {
+        const data = await fetchShopMyData(token, date);
 
         if (data && typeof data === 'object') {
           const newCsvData = new CsvData({
             fileName: fileName,
-            date: dateString,
+            date: date,
             rawData: data,
             processedData: Object.values(data.results).map(item => ({
               name: item.User_name,
@@ -179,27 +187,19 @@ async function scrapeShopmyDataForAllDays(userId, password) {
           });
 
           await newCsvData.save();
-          console.log(`Saved data for ${dateString}`);
+          console.log(`Saved data for ${date}`);
 
-          // Wait for 30 seconds before the next iteration only if we downloaded data
-          await sleep(30000);
+          // Wait for 15 seconds before the next iteration
+          await sleep(15000);
         } else {
-          console.error(`Invalid data received for date: ${dateString}`);
+          console.error(`Invalid data received for date: ${date}`);
         }
       } else {
-        console.log(`Data for ${dateString} already exists, skipping`);
+        console.log(`Data for ${date} already exists, skipping`);
       }
-
-      // Move to the next day
-      currentDate.setDate(currentDate.getDate() + 1);
     }
   } catch (error) {
     console.error('Error in scrapeShopmyDataForAllDays:', error);
     throw error;
   }
 }
-
-module.exports = {
-  scrapeShopmyAndSave2Db: exports.scrapeShopmyAndSave2Db,
-  scrapeShopmyAndSave2DbAll: exports.scrapeShopmyAndSave2DbAll
-};

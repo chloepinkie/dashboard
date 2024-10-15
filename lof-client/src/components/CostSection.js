@@ -15,7 +15,7 @@ export default function CostSection({ data }) {
             <Typography variant="h6">${data.costPerOrder || 0}</Typography>
           </Grid>
           <Grid item xs={4}>
-            <Typography variant="subtitle1">Commission</Typography>
+            <Typography variant="subtitle1">Total Commission</Typography>
             <Typography variant="h6">${data.commission || 0}</Typography>
           </Grid>
         </Grid>

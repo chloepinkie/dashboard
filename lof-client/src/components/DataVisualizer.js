@@ -1,23 +1,165 @@
 import { useState, useEffect } from 'react';
 import { Typography, Box, Grid, Paper } from '@mui/material';
 import { LineChart, BarChart, PieChart, Line, Bar, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ResponsiveContainer } from 'recharts';
+import AffiliateSection from './AffiliateSection';
+import CostSection from './CostSection';
+import AffiliateSelector from './AffiliateSelector';
+import { formatNumber } from '../utils/numberFormat';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function DataVisualizer({ data, dateRange }) {
-  console.log('DataVisualizer received data:', JSON.stringify(data, null, 2));
+  console.log('DataVisualizer received data:', data);
   console.log('DataVisualizer received dateRange:', dateRange);
 
-  if (!data) {
+  const [processedData, setProcessedData] = useState({
+    dailyStats: [],
+    topAffiliates: [],
+    overallStats: {},
+    affiliateStats: {},
+    costStats: {}
+  });
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      const dailyStats = [];
+      let totalRevenue = 0;
+      let totalOrders = 0;
+      let totalClicks = 0;
+      let totalCommission = 0;
+      let totalMentions = 0;
+      let totalEMV = 0;
+      const affiliatesMap = new Map();
+      const startDate = new Date(dateRange.start);
+
+      data.forEach(doc => {
+        const date = doc.date;
+        let dailyRevenue = 0;
+        let dailyOrders = 0;
+        let dailyClicks = 0;
+        let dailyCommission = 0;
+        let dailyMentions = 0;
+        let dailyEMV = 0;
+
+        doc.processedData.forEach(affiliate => {
+          dailyRevenue += affiliate.orderVolume;
+          dailyOrders += affiliate.orderCount;
+          dailyClicks += affiliate.clicks;
+          dailyCommission += affiliate.commissionsEarned;
+          dailyMentions += affiliate.mentions;
+          dailyEMV += affiliate.estimatedMediaValue;
+
+          // Update affiliates map
+          if (affiliatesMap.has(affiliate.User_id)) {
+            const existingData = affiliatesMap.get(affiliate.User_id);
+            affiliatesMap.set(affiliate.User_id, {
+              ...existingData,
+              orderVolume: existingData.orderVolume + affiliate.orderVolume,
+              orderCount: existingData.orderCount + affiliate.orderCount,
+              clicks: existingData.clicks + affiliate.clicks,
+              commissionsEarned: existingData.commissionsEarned + affiliate.commissionsEarned,
+            });
+          } else {
+            affiliatesMap.set(affiliate.User_id, {
+              name: affiliate.name,
+              instagram: affiliate.instagram,
+              orderVolume: affiliate.orderVolume,
+              orderCount: affiliate.orderCount,
+              clicks: affiliate.clicks,
+              commissionsEarned: affiliate.commissionsEarned,
+              profilePic: affiliate.User_image,
+              firstLinked: new Date(affiliate.firstLinked)
+            });
+          }
+        });
+
+        dailyStats.push({
+          date,
+          revenue: dailyRevenue,
+          orders: dailyOrders,
+          clicks: dailyClicks,
+          commission: dailyCommission,
+          mentions: dailyMentions,
+          emv: dailyEMV
+        });
+
+        totalRevenue += dailyRevenue;
+        totalOrders += dailyOrders;
+        totalClicks += dailyClicks;
+        totalCommission += dailyCommission;
+        totalMentions += dailyMentions;
+        totalEMV += dailyEMV;
+      });
+
+      const topAffiliates = Array.from(affiliatesMap.values())
+        .sort((a, b) => b.orderVolume - a.orderVolume)
+        .slice(0, 5);
+
+      const newAffiliates = Array.from(affiliatesMap.values()).filter(
+        affiliate => affiliate.firstLinked >= startDate
+      ).length;
+
+      const affiliatesCreatingSales = Array.from(affiliatesMap.values()).filter(
+        affiliate => affiliate.orderCount > 0
+      ).length;
+
+      const avgGSDPerActiveAffiliate = affiliatesCreatingSales > 0
+        ? totalRevenue / affiliatesCreatingSales
+        : 0;
+
+      const avgClicksPerActiveAffiliate = affiliatesCreatingSales > 0
+        ? totalClicks / affiliatesCreatingSales
+        : 0;
+
+      // Calculate cost stats
+      const costPerClick = totalClicks > 0 ? totalCommission / totalClicks : 0;
+      const costPerOrder = totalOrders > 0 ? totalCommission / totalOrders : 0;
+
+      setProcessedData({
+        dailyStats,
+        topAffiliates,
+        overallStats: {
+          totalRevenue: totalRevenue.toFixed(2),
+          totalOrders,
+          totalClicks,
+          totalCommission: totalCommission.toFixed(2),
+          averageOrderValue: totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : '0.00',
+          totalAffiliates: affiliatesMap.size
+        },
+        affiliateStats: {
+          totalAffiliates: affiliatesMap.size,
+          newAffiliates,
+          affiliatesCreatingSales,
+          percentAffiliatesCreatingSales: (affiliatesCreatingSales / affiliatesMap.size * 100).toFixed(2),
+          avgGSDPerActiveAffiliate: avgGSDPerActiveAffiliate.toFixed(2),
+          avgClicksPerActiveAffiliate: avgClicksPerActiveAffiliate.toFixed(2),
+          mentions: totalMentions,
+          clicks: totalClicks,
+          emv: totalEMV.toFixed(2)
+        },
+        costStats: {
+          costPerClick: costPerClick.toFixed(2),
+          costPerOrder: costPerOrder.toFixed(2),
+          commission: totalCommission.toFixed(2)
+        }
+      });
+    }
+  }, [data, dateRange]);
+
+  if (!data || data.length === 0) {
     return <Typography>No data available</Typography>;
   }
 
-  const { salesData, topAffiliates, sales, affiliate, cost } = data;
+  const { dailyStats, topAffiliates, overallStats, affiliateStats, costStats } = processedData;
 
   const renderMetricCard = (title, value, unit = '') => (
     <Paper elevation={3} sx={{ p: 2, textAlign: 'center' }}>
       <Typography variant="h6">{title}</Typography>
-      <Typography variant="h4">{typeof value === 'number' ? value.toFixed(2) : value}{unit}</Typography>
+      <Typography variant="h4">
+        {unit === '$' ? '$' : ''}
+        {formatNumber(value, unit === '$' ? 'currency' : 'decimal', 2, 2).replace('$', '')}
+        {unit !== '$' ? unit : ''}
+      </Typography>
     </Paper>
   );
 
@@ -30,28 +172,28 @@ export default function DataVisualizer({ data, dateRange }) {
     <Box>
       <Typography variant="body2" color="textSecondary">
         Debug Info: Data received: Yes, 
-        Sales Data Length: {salesData?.length || 0}, 
-        Top Affiliates: {topAffiliates?.length || 0}
+        Daily Stats: {dailyStats.length}, 
+        Top Affiliates: {topAffiliates.length}
       </Typography>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={4}>
-          {renderMetricCard('Total Revenue', sales?.revenue, '$')}
+          {renderMetricCard('Total Revenue', overallStats.totalRevenue, '$')}
         </Grid>
         <Grid item xs={12} md={4}>
-          {renderMetricCard('Total Orders', sales?.ordersGenerated)}
+          {renderMetricCard('Total Orders', overallStats.totalOrders)}
         </Grid>
         <Grid item xs={12} md={4}>
-          {renderMetricCard('Avg Order Value', sales?.averageOrderValue, '$')}
+          {renderMetricCard('Avg Order Value', overallStats.averageOrderValue, '$')}
         </Grid>
         <Grid item xs={12} md={4}>
-          {renderMetricCard('Total Affiliates', affiliate?.totalAffiliates)}
+          {renderMetricCard('Total Affiliates', overallStats.totalAffiliates)}
         </Grid>
         <Grid item xs={12} md={4}>
-          {renderMetricCard('Total Clicks', affiliate?.clicks)}
+          {renderMetricCard('Total Clicks', overallStats.totalClicks)}
         </Grid>
         <Grid item xs={12} md={4}>
-          {renderMetricCard('Total Commission', cost?.commission, '$')}
+          {renderMetricCard('Total Commission', overallStats.totalCommission, '$')}
         </Grid>
       </Grid>
 
@@ -59,11 +201,11 @@ export default function DataVisualizer({ data, dateRange }) {
         <Grid item xs={12} md={6}>
           <Typography variant="h6" gutterBottom>Revenue Over Time</Typography>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={salesData}>
+            <LineChart data={dailyStats}>
               <XAxis dataKey="date" />
-              <YAxis />
+              <YAxis tickFormatter={(value) => `$${formatNumber(value)}`} />
               <CartesianGrid strokeDasharray="3 3" />
-              <Tooltip />
+              <Tooltip formatter={(value) => `$${formatNumber(value)}`} />
               <Legend />
               <Line type="monotone" dataKey="revenue" stroke="#8884d8" />
             </LineChart>
@@ -72,12 +214,12 @@ export default function DataVisualizer({ data, dateRange }) {
         <Grid item xs={12} md={6}>
           <Typography variant="h6" gutterBottom>Orders vs Clicks</Typography>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={salesData}>
+            <BarChart data={dailyStats}>
               <XAxis dataKey="date" />
               <YAxis yAxisId="left" />
               <YAxis yAxisId="right" orientation="right" />
               <CartesianGrid strokeDasharray="3 3" />
-              <Tooltip />
+              <Tooltip formatter={(value) => value.toFixed(2)} />
               <Legend />
               <Bar yAxisId="left" dataKey="orders" fill="#8884d8" />
               <Bar yAxisId="right" dataKey="clicks" fill="#82ca9d" />
@@ -89,7 +231,7 @@ export default function DataVisualizer({ data, dateRange }) {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={topAffiliates} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
+              <XAxis type="number" tickFormatter={(value) => `$${formatNumber(value)}`} />
               <YAxis 
                 dataKey="name" 
                 type="category" 
@@ -99,7 +241,7 @@ export default function DataVisualizer({ data, dateRange }) {
               <Tooltip 
                 formatter={(value, name, props) => {
                   return [
-                    `$${value.toFixed(2)}`,
+                    `$${formatNumber(value)}`,
                     'Order Volume'
                   ];
                 }}
@@ -107,6 +249,7 @@ export default function DataVisualizer({ data, dateRange }) {
                   if (payload && payload[0]) {
                     return (
                       <div>
+                        <img src={payload[0].payload.profilePic} alt="Profile" style={{ width: '100px', height: '100px', borderRadius: '50%', marginLeft: '10px' }} /><br />
                         <strong>Name:</strong> {payload[0].payload.name}<br />
                         <strong>Instagram:</strong> {payload[0].payload.instagram || 'N/A'}<br />
                       </div>
@@ -114,7 +257,7 @@ export default function DataVisualizer({ data, dateRange }) {
                   }
                   return label;
                 }}
-                wrapperStyle={{ zIndex: 1000 }} // Add this line to increase z-index
+                wrapperStyle={{ zIndex: 1000 }}
               />
               <Legend />
               <Bar dataKey="orderVolume" fill="#8884d8" name="Order Volume" />
@@ -122,19 +265,26 @@ export default function DataVisualizer({ data, dateRange }) {
           </ResponsiveContainer>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Typography variant="h6" gutterBottom>Commission vs EMV</Typography>
+          <Typography variant="h6" gutterBottom>Commission Over Time</Typography>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={salesData}>
+            <LineChart data={dailyStats}>
               <XAxis dataKey="date" />
-              <YAxis yAxisId="left" />
-              <YAxis yAxisId="right" orientation="right" />
+              <YAxis tickFormatter={(value) => `$${formatNumber(value)}`} />
               <CartesianGrid strokeDasharray="3 3" />
-              <Tooltip />
+              <Tooltip formatter={(value) => `$${formatNumber(value)}`} />
               <Legend />
-              <Line yAxisId="left" type="monotone" dataKey="commission" stroke="#8884d8" />
-              <Line yAxisId="right" type="monotone" dataKey="emv" stroke="#82ca9d" />
+              <Line type="monotone" dataKey="commission" stroke="#8884d8" />
             </LineChart>
           </ResponsiveContainer>
+        </Grid>
+        <Grid item xs={12}>
+          <AffiliateSection data={affiliateStats} />
+        </Grid>
+        <Grid item xs={12}>
+          <CostSection data={costStats} />
+        </Grid>
+        <Grid item xs={12}>
+          <AffiliateSelector data={data} dateRange={dateRange} />
         </Grid>
       </Grid>
     </Box>

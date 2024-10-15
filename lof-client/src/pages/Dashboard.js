@@ -81,7 +81,7 @@ export default function DashboardPage() {
       <Box component="header" sx={{ p: 2, bgcolor: 'background.paper', boxShadow: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <img src={LOFlogo} alt="Left On Friday Logo" width={284} height={44.5} />
         <Box>
-          {userType === 'admin' && <Button onClick={handleOpenSettings} sx={{ mr: 2 }}>Settings</Button>}
+          {userType === 'admin' && <Button onClick={handleOpenSettings} sx={{ mr: 2 }}>Admin Settings</Button>}
           <Button variant="contained" color="primary" onClick={handleLogout}>Logout</Button>
         </Box>
       </Box>
