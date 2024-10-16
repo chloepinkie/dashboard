@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "build": "yarn --cwd lof-client build && yarn --cwd lof-server build",
+    "start": "yarn --cwd lof-client start & yarn --cwd lof-server start"
+  }
+}
