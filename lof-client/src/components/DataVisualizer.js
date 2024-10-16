@@ -122,11 +122,11 @@ export default function DataVisualizer({ data, dateRange }) {
         dailyStats,
         topAffiliates,
         overallStats: {
-          totalRevenue: totalRevenue.toFixed(2),
+          totalRevenue: totalRevenue,
           totalOrders,
           totalClicks,
-          totalCommission: totalCommission.toFixed(2),
-          averageOrderValue: totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : '0.00',
+          totalCommission: totalCommission,
+          averageOrderValue: totalOrders > 0 ? (totalRevenue / totalOrders) : '0.00',
           totalAffiliates: affiliatesMap.size
         },
         affiliateStats: {
@@ -134,7 +134,7 @@ export default function DataVisualizer({ data, dateRange }) {
           newAffiliates,
           affiliatesCreatingSales,
           percentAffiliatesCreatingSales: (affiliatesCreatingSales / affiliatesMap.size * 100).toFixed(2),
-          avgGSDPerActiveAffiliate: avgGSDPerActiveAffiliate.toFixed(2),
+          avgGSDPerActiveAffiliate: avgGSDPerActiveAffiliate,
           avgClicksPerActiveAffiliate: avgClicksPerActiveAffiliate.toFixed(2),
           mentions: totalMentions,
           clicks: totalClicks,
@@ -155,13 +155,24 @@ export default function DataVisualizer({ data, dateRange }) {
 
   const { dailyStats, topAffiliates, overallStats, affiliateStats, costStats } = processedData;
 
+  const renderValue = (value, unit = '') => {
+    if (typeof value === 'number') {
+      if (unit === '$') {
+        return `$${formatNumber(value, 'currency', 2, 2).replace('$', '')}`;
+      } else if (Number.isInteger(value)) {
+        return formatNumber(value, 'decimal', 0, 0);
+      } else {
+        return formatNumber(value, 'decimal', 2, 2);
+      }
+    }
+    return value;
+  };
+
   const renderMetricCard = (title, value, unit = '') => (
     <Paper elevation={3} sx={{ p: 2, textAlign: 'center' }}>
       <Typography variant="h6">{title}</Typography>
       <Typography variant="h4">
-        {unit === '$' ? '$' : ''}
-        {formatNumber(value, unit === '$' ? 'currency' : 'decimal', 2, 2).replace('$', '')}
-        {unit !== '$' ? unit : ''}
+        {renderValue(value, unit)}
       </Typography>
     </Paper>
   );

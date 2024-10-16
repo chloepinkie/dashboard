@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenvFlow = require('dotenv-flow');
 const mongoose = require('mongoose');
-const http = require('http');  // Add this line
+const http = require('http');
 const authRoutes = require('./routes/auth.routes');
 const dataRoutes = require('./routes/data.routes');
 const uploadRoutes = require('./routes/upload.routes');
@@ -33,12 +33,12 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 // Middleware
 app.use(cors());
-// app.use(express.json());
-app.use(express.json({ limit: '50mb' }));  // Increase JSON payload limit
-app.use(express.urlencoded({ limit: '50mb', extended: true }));  // Increase URL-encoded payload limit
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
 app.get('/', (req, res) => {
+  console.log('Received request on root route');
   res.json({ message: 'Welcome to the backend!' });
 });
 
@@ -49,6 +49,27 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/scrape', scrapeRoutes);
 
 // Start the server
-server.listen(port, () => {
+server.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port: ${port}`);
+  console.log(`Server is accessible at: http://localhost:${port}`);
+});
+
+// Error handling
+server.on('error', (error) => {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  switch (error.code) {
+    case 'EACCES':
+      console.error(`Port ${port} requires elevated privileges`);
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(`Port ${port} is already in use`);
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
 });
