@@ -1,24 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Box, Select, MenuItem, Grid, Paper } from '@mui/material';
 import { formatNumber } from '../utils/numberFormat';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export default function AffiliateSelector({ data, dateRange }) {
-  const [selectedAffiliate, setSelectedAffiliate] = useState('');
+export default function AffiliateSelector({ data, dateRange, selectedAffiliate, onAffiliateSelect }) {
   const [affiliateStats, setAffiliateStats] = useState(null);
-  const renderValue = (value, unit = '') => {
-    if (unit === '%') {
-      return `${formatNumber(value, 'decimal', 2)}%`;
-    } else if (unit === '$') {
-      return `${formatNumber(value, 'currency', 2)}`;
-    } else {
-      return formatNumber(value, 'decimal', 0);
-    }
-  };
+  const [timeSeriesData, setTimeSeriesData] = useState([]);
 
   useEffect(() => {
     if (selectedAffiliate && data) {
       const stats = calculateAffiliateStats(selectedAffiliate, data);
       setAffiliateStats(stats);
+      setTimeSeriesData(generateTimeSeriesData(selectedAffiliate, data));
     }
   }, [selectedAffiliate, data]);
 
@@ -56,14 +49,50 @@ export default function AffiliateSelector({ data, dateRange }) {
     };
   };
 
+  const generateTimeSeriesData = (affiliateId, data) => {
+    return data.map(doc => {
+      const affiliate = doc.processedData.find(a => a.User_id === affiliateId);
+      return {
+        date: doc.date,
+        revenue: affiliate ? affiliate.orderVolume : 0,
+        clicks: affiliate ? affiliate.clicks : 0,
+        orders: affiliate ? affiliate.orderCount : 0
+      };
+    });
+  };
+
+  const renderValue = (value, unit = '') => {
+    if (unit === '%') {
+      return `${formatNumber(value, 'decimal', 2)}%`;
+    } else if (unit === '$') {
+      return `${formatNumber(value, 'currency', 2)}`;
+    } else {
+      return formatNumber(value, 'decimal', 0);
+    }
+  };
+
   const renderStatCard = (title, value, unit = '') => (
     <Grid item xs={6} sm={4} md={3}>
       <Paper elevation={3} sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="subtitle1">{title}</Typography>
-        <Typography variant="h6">
-          {renderValue(value, unit)}
-        </Typography>
+        <Typography variant="h6">{renderValue(value, unit)}</Typography>
       </Paper>
+    </Grid>
+  );
+
+  const renderTimeSeriesChart = (title, dataKey, color) => (
+    <Grid item xs={12} md={4}>
+      <Typography variant="h6" gutterBottom>{title}</Typography>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={timeSeriesData}>
+          <XAxis dataKey="date" />
+          <YAxis />
+          <CartesianGrid strokeDasharray="3 3" />
+          <Tooltip formatter={(value) => renderValue(value, dataKey === 'revenue' ? '$' : '')} />
+          <Legend />
+          <Line type="monotone" dataKey={dataKey} stroke={color} />
+        </LineChart>
+      </ResponsiveContainer>
     </Grid>
   );
 
@@ -79,8 +108,8 @@ export default function AffiliateSelector({ data, dateRange }) {
     <Box>
       <Typography variant="h6" gutterBottom>Select Affiliate</Typography>
       <Select
-        value={selectedAffiliate}
-        onChange={(e) => setSelectedAffiliate(e.target.value)}
+        value={selectedAffiliate || ''}
+        onChange={(e) => onAffiliateSelect(e.target.value)}
         fullWidth
         sx={{ mb: 2 }}
       >
@@ -106,6 +135,14 @@ export default function AffiliateSelector({ data, dateRange }) {
             {renderStatCard('Total Commission', affiliateStats.totalCommission, '$')}
             {renderStatCard('Conversion Rate', affiliateStats.conversionRate, '%')}
           </Grid>
+          <Box mt={4}>
+            <Typography variant="h6" gutterBottom>Performance Over Time</Typography>
+            <Grid container spacing={3}>
+              {renderTimeSeriesChart('Revenue Over Time', 'revenue', '#8884d8')}
+              {renderTimeSeriesChart('Clicks Over Time', 'clicks', '#82ca9d')}
+              {renderTimeSeriesChart('Orders Over Time', 'orders', '#ffc658')}
+            </Grid>
+          </Box>
         </Box>
       )}
     </Box>

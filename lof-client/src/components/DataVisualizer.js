@@ -20,6 +20,8 @@ export default function DataVisualizer({ data, dateRange }) {
     costStats: {}
   });
 
+  const [selectedAffiliate, setSelectedAffiliate] = useState(null);
+
   useEffect(() => {
     if (data && data.length > 0) {
       const dailyStats = [];
@@ -62,6 +64,7 @@ export default function DataVisualizer({ data, dateRange }) {
           } else {
             affiliatesMap.set(affiliate.User_id, {
               name: affiliate.name,
+              User_id: affiliate.User_id,
               instagram: affiliate.instagram,
               orderVolume: affiliate.orderVolume,
               orderCount: affiliate.orderCount,
@@ -168,6 +171,11 @@ export default function DataVisualizer({ data, dateRange }) {
     return name.substr(0, maxLength - 3) + '...';
   };
 
+  const handleAffiliateClick = (affiliate) => {
+    console.log('Affiliate clicked:', affiliate);
+    setSelectedAffiliate(affiliate.User_id);
+  };
+
   return (
     <Box>
       <Typography variant="body2" color="textSecondary">
@@ -260,7 +268,12 @@ export default function DataVisualizer({ data, dateRange }) {
                 wrapperStyle={{ zIndex: 1000 }}
               />
               <Legend />
-              <Bar dataKey="orderVolume" fill="#8884d8" name="Order Volume" />
+              <Bar 
+                dataKey="orderVolume" 
+                fill="#8884d8" 
+                name="Order Volume" 
+                onClick={(data) => handleAffiliateClick(data)}
+              />
             </BarChart>
           </ResponsiveContainer>
         </Grid>
@@ -284,7 +297,12 @@ export default function DataVisualizer({ data, dateRange }) {
           <CostSection data={costStats} />
         </Grid>
         <Grid item xs={12}>
-          <AffiliateSelector data={data} dateRange={dateRange} />
+          <AffiliateSelector 
+            data={data} 
+            dateRange={dateRange} 
+            selectedAffiliate={selectedAffiliate}
+            onAffiliateSelect={setSelectedAffiliate}
+          />
         </Grid>
       </Grid>
     </Box>
