@@ -50,10 +50,11 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-exports.scrapeShopmyAndSave2DbRecent = async (req, res) => {
+/* exports.scrapeShopmyAndSave2DbRecent = async (req, res) => {
   try {
     const token = await getShopMyToken();
-    const today = new Date();
+    let today = new Date();
+    today.setDate(today.getDate() - 1);
     const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
 
     let currentDate = new Date(oneYearAgo);
@@ -116,7 +117,7 @@ exports.scrapeShopmyAndSave2DbRecent = async (req, res) => {
     console.error('Error scraping and saving Shopmy data:', error);
     res.status(500).json({ error: 'Failed to scrape and save Shopmy data', details: error.message });
   }
-};
+}; */
 
 exports.scrapeShopmyAndSave2DbAll = async (req, res) => {
   const { token } = req.body;
@@ -135,7 +136,8 @@ exports.scrapeShopmyAndSave2DbAll = async (req, res) => {
 async function scrapeShopmyDataForAllDays(token) {
   try {
     //const token = await getShopMyToken();
-    const today = new Date();
+    let today = new Date();
+    today.setDate(today.getDate() - 1);
     const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
 
     // Generate all file names and dates for the year
