@@ -8,11 +8,13 @@ import dayjs from 'dayjs';
 export default function DateRangeSelector({ onChange }) {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const minDate = dayjs('2023-12-01');
+  const maxDate = dayjs(); // Current date
 
   useEffect(() => {
-    // Set default date range to last 7 days
-    const end = dayjs();
-    const start = end.subtract(8, 'day');
+    // Set default date range to last 7 days, but not before minDate
+    const end = maxDate;
+    const start = dayjs(end.subtract(7, 'day'), minDate); // Use 6 to include today
     setStartDate(start);
     setEndDate(end);
     onChange({ start: start.format('YYYY-MM-DD'), end: end.format('YYYY-MM-DD') });
@@ -34,8 +36,8 @@ export default function DateRangeSelector({ onChange }) {
   };
 
   const handleLastNDays = (days) => {
-    const end = dayjs();
-    const start = end.subtract(days, 'day');
+    const end = maxDate;
+    const start = dayjs(end.subtract(days - 0, 'day'), minDate); // Subtract (days - 1) to include today
     setStartDate(start);
     setEndDate(end);
     onChange({ start: start.format('YYYY-MM-DD'), end: end.format('YYYY-MM-DD') });
@@ -49,13 +51,15 @@ export default function DateRangeSelector({ onChange }) {
             label="Start Date"
             value={startDate}
             onChange={(newValue) => handleDateChange(newValue, true)}
-            renderInput={(params) => <TextField {...params} />}
+            minDate={minDate}
+            maxDate={endDate || maxDate}
           />
           <DatePicker
             label="End Date"
             value={endDate}
             onChange={(newValue) => handleDateChange(newValue, false)}
-            renderInput={(params) => <TextField {...params} />}
+            minDate={startDate || minDate}
+            maxDate={maxDate}
           />
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
