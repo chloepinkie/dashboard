@@ -112,10 +112,14 @@ export default function AffiliateSelector({ data, dateRange, selectedAffiliate, 
         onChange={(e) => onAffiliateSelect(e.target.value)}
         fullWidth
         sx={{ mb: 2 }}
+        displayEmpty
+        renderValue={(selected) => {
+          if (!selected) {
+            return <em>Make your selection</em>;
+          }
+          return affiliates.find(a => a.id === selected)?.name || '';
+        }}
       >
-        <MenuItem value="">
-          <em>Select an affiliate</em>
-        </MenuItem>
         {affiliates.map((affiliate) => (
           <MenuItem key={affiliate.id} value={affiliate.id}>{affiliate.name}</MenuItem>
         ))}

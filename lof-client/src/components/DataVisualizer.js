@@ -189,12 +189,6 @@ export default function DataVisualizer({ data, dateRange }) {
 
   return (
     <Box>
-      <Typography variant="body2" color="textSecondary">
-        Debug Info: Data received: Yes, 
-        Daily Stats: {dailyStats.length}, 
-        Top Affiliates: {topAffiliates.length}
-      </Typography>
-
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={4}>
           {renderMetricCard('Total Revenue', overallStats.totalRevenue, '$')}

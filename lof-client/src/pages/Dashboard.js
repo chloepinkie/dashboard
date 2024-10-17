@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Typography, Box, Container, Paper, CircularProgress, Button, Modal } from '@mui/material';
+import { Typography, Box, Container, Paper, CircularProgress, Button, Modal, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 import DateRangeSelector from '../components/DateRangeSelector';
@@ -78,12 +78,28 @@ export default function DashboardPage() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Header */}
-      <Box component="header" sx={{ p: 2, bgcolor: 'background.paper', boxShadow: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <img src={LOFlogo} alt="Left On Friday Logo" width={284} height={44.5} />
-        <Box>
-          {userType === 'admin' && <Button onClick={handleOpenSettings} sx={{ mr: 2 }}>Admin Settings</Button>}
-          <Button variant="contained" color="primary" onClick={handleLogout}>Logout</Button>
-        </Box>
+      <Box component="header" sx={{ p: 2, bgcolor: 'background.paper', boxShadow: 1 }}>
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          justifyContent="space-between" 
+          alignItems={{ xs: 'center', sm: 'center' }}
+          spacing={2}
+        >
+          <img src={LOFlogo} alt="Left On Friday Logo" width={284} height={44.5} />
+          <Stack 
+            direction={{ xs: 'column', sm: 'row' }} 
+            spacing={2}
+          >
+            {userType === 'admin' && (
+              <Button onClick={handleOpenSettings} variant="outlined">
+                Admin Settings
+              </Button>
+            )}
+            <Button variant="contained" color="primary" onClick={handleLogout}>
+              Logout
+            </Button>
+          </Stack>
+        </Stack>
       </Box>
 
       {/* Main Content */}
