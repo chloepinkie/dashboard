@@ -135,15 +135,15 @@ export default function DataVisualizer({ data, dateRange }) {
           affiliatesCreatingSales,
           percentAffiliatesCreatingSales: (affiliatesCreatingSales / affiliatesMap.size * 100).toFixed(2),
           avgGSDPerActiveAffiliate: avgGSDPerActiveAffiliate,
-          avgClicksPerActiveAffiliate: avgClicksPerActiveAffiliate.toFixed(2),
+          avgClicksPerActiveAffiliate: avgClicksPerActiveAffiliate.toFixed(0),
           mentions: totalMentions,
           clicks: totalClicks,
-          emv: totalEMV.toFixed(2)
+          emv: totalEMV
         },
         costStats: {
-          costPerClick: costPerClick.toFixed(2),
-          costPerOrder: costPerOrder.toFixed(2),
-          commission: totalCommission.toFixed(2)
+          costPerClick: costPerClick,
+          costPerOrder: costPerOrder,
+          commission: totalCommission
         }
       });
     }
@@ -158,7 +158,7 @@ export default function DataVisualizer({ data, dateRange }) {
   const renderValue = (value, unit = '') => {
     if (typeof value === 'number') {
       if (unit === '$') {
-        return `$${formatNumber(value, 'currency', 2, 2).replace('$', '')}`;
+        return `${formatNumber(value, 'currency', 2, 2)}`;
       } else if (Number.isInteger(value)) {
         return formatNumber(value, 'decimal', 0, 0);
       } else {

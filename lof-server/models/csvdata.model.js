@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const CsvDataSchema = new mongoose.Schema({
   fileName: { type: String, required: true, index: true },
-  date: { type: String, required: true },
+  date: { type: String, required: true, index: true },
   rawData: [mongoose.Schema.Types.Mixed],
   processedData: [{
     name: { type: String, default: '' },

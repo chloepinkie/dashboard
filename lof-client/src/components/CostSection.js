@@ -19,15 +19,15 @@ export default function CostSection({ data }) {
         <Grid container spacing={2}>
           <Grid item xs={4}>
             <Typography variant="subtitle1">Cost per Click</Typography>
-            <Typography variant="h6">${data.costPerClick || 0}</Typography>
+            <Typography variant="h6">{renderValue(data.costPerClick, '$')}</Typography>
           </Grid>
           <Grid item xs={4}>
             <Typography variant="subtitle1">Cost per Order</Typography>
-            <Typography variant="h6">${data.costPerOrder || 0}</Typography>
+            <Typography variant="h6">{renderValue(data.costPerOrder, '$')}</Typography>
           </Grid>
           <Grid item xs={4}>
             <Typography variant="subtitle1">Total Commission</Typography>
-            <Typography variant="h6">${data.commission || 0}</Typography>
+            <Typography variant="h6">{renderValue(data.commission, '$')}</Typography>
           </Grid>
         </Grid>
       </CardContent>
