@@ -33,4 +33,4 @@ export default function CostSection({ data }) {
       </CardContent>
     </Card>
   );
-}
+} 
