@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 import DateRangeSelector from '../components/DateRangeSelector';
 import DataVisualizer from '../components/DataVisualizer';
-import Settings from '../components/Settings';
+import AdminSettings from '../components/AdminSettings';
 import LOFlogo from '../assets/logos/LOFlogo.png';
 
 export default function DashboardPage() {
@@ -12,7 +12,7 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
   const [dateRange, setDateRange] = useState({ start: null, end: null });
   const [error, setError] = useState(null);
-  const [openSettings, setOpenSettings] = useState(false);
+  const [openAdminSettings, setOpenAdminSettings] = useState(false);
   const navigate = useNavigate();
 
   const fetchData = useCallback(async () => {
@@ -70,8 +70,8 @@ export default function DashboardPage() {
     navigate('/');
   };
 
-  const handleOpenSettings = () => setOpenSettings(true);
-  const handleCloseSettings = () => setOpenSettings(false);
+  const handleOpenAdminSettings = () => setOpenAdminSettings(true);
+  const handleCloseAdminSettings = () => setOpenAdminSettings(false);
 
   const userType = localStorage.getItem('userType');
 
@@ -91,7 +91,7 @@ export default function DashboardPage() {
             spacing={2}
           >
             {userType === 'admin' && (
-              <Button onClick={handleOpenSettings} variant="outlined">
+              <Button onClick={handleOpenAdminSettings} variant="outlined">
                 Admin Settings
               </Button>
             )}
@@ -122,12 +122,12 @@ export default function DashboardPage() {
         </Paper>
       </Container>
 
-      {/* Settings Modal */}
+      {/* Admin Settings Modal */}
       <Modal
-        open={openSettings}
-        onClose={handleCloseSettings}
-        aria-labelledby="settings-modal"
-        aria-describedby="settings-modal-description"
+        open={openAdminSettings}
+        onClose={handleCloseAdminSettings}
+        aria-labelledby="admin-settings-modal"
+        aria-describedby="admin-settings-modal-description"
       >
         <Box sx={{
           position: 'absolute',
@@ -139,8 +139,11 @@ export default function DashboardPage() {
           p: 0,
           outline: 'none',
           borderRadius: 2,
+          height: {xs: '100%', md: '80%'},
+          width: {xs: '100%', md: '500px'},
+          overflow: 'auto'
         }}>
-          <Settings onClose={handleCloseSettings} onUpload={fetchData} />
+          <AdminSettings onClose={handleCloseAdminSettings} onUpload={fetchData} />
         </Box>
       </Modal>
 

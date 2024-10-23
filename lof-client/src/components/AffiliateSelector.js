@@ -19,7 +19,9 @@ export default function AffiliateSelector({ data, dateRange, selectedAffiliate, 
     let totalOrders = 0;
     let totalRevenue = 0;
     let totalClicks = 0;
+    let totalMentions = 0;
     let totalCommission = 0;
+    let totalEMV = 0;
     let affiliateInfo = null;
 
     data.forEach(doc => {
@@ -28,7 +30,9 @@ export default function AffiliateSelector({ data, dateRange, selectedAffiliate, 
         totalOrders += affiliate.orderCount;
         totalRevenue += affiliate.orderVolume;
         totalClicks += affiliate.clicks;
+        totalMentions += affiliate.mentions;
         totalCommission += affiliate.commissionsEarned;
+        totalEMV += affiliate.estimatedMediaValue;
         if (!affiliateInfo) {
           affiliateInfo = {
             name: affiliate.name,
@@ -44,7 +48,9 @@ export default function AffiliateSelector({ data, dateRange, selectedAffiliate, 
       totalOrders,
       totalRevenue,
       totalClicks,
+      totalMentions,
       totalCommission,
+      totalEMV,
       conversionRate: totalClicks > 0 ? (totalOrders / totalClicks * 100).toFixed(2) : 0
     };
   };
@@ -56,6 +62,7 @@ export default function AffiliateSelector({ data, dateRange, selectedAffiliate, 
         date: doc.date,
         revenue: affiliate ? affiliate.orderVolume : 0,
         clicks: affiliate ? affiliate.clicks : 0,
+        mentions: affiliate ? affiliate.mentions : 0,
         orders: affiliate ? affiliate.orderCount : 0
       };
     });
@@ -136,14 +143,17 @@ export default function AffiliateSelector({ data, dateRange, selectedAffiliate, 
             {renderStatCard('Total Orders', affiliateStats.totalOrders)}
             {renderStatCard('Total Revenue', affiliateStats.totalRevenue, '$')}
             {renderStatCard('Total Clicks', affiliateStats.totalClicks)}
+            {renderStatCard('Total Mentions', affiliateStats.totalMentions)}
             {renderStatCard('Total Commission', affiliateStats.totalCommission, '$')}
             {renderStatCard('Conversion Rate', affiliateStats.conversionRate, '%')}
+            {renderStatCard('Total EMV', affiliateStats.totalEMV, '$')}
           </Grid>
           <Box mt={4}>
             <Typography variant="h6" gutterBottom>Performance Over Time</Typography>
             <Grid container spacing={3}>
               {renderTimeSeriesChart('Revenue Over Time', 'revenue', '#8884d8')}
               {renderTimeSeriesChart('Clicks Over Time', 'clicks', '#82ca9d')}
+              {renderTimeSeriesChart('Mentions Over Time', 'mentions', '#ffc658')}
               {renderTimeSeriesChart('Orders Over Time', 'orders', '#ffc658')}
             </Grid>
           </Box>

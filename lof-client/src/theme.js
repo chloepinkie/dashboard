@@ -29,6 +29,24 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        '*::-webkit-scrollbar': {
+          width: '2px',
+          height: '0px',
+        },
+        '*::-webkit-scrollbar-track': {
+          background: 'transparent',
+        },
+        '*::-webkit-scrollbar-thumb': {
+          backgroundColor: '#d9282f',
+          borderRadius: '6px',
+        },
+        '*::-webkit-scrollbar-thumb:hover': {
+          backgroundColor: '#b22025',
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {

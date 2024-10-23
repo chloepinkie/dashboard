@@ -59,7 +59,9 @@ export default function DataVisualizer({ data, dateRange }) {
               orderVolume: existingData.orderVolume + affiliate.orderVolume,
               orderCount: existingData.orderCount + affiliate.orderCount,
               clicks: existingData.clicks + affiliate.clicks,
+              mentions: existingData.mentions + affiliate.mentions,
               commissionsEarned: existingData.commissionsEarned + affiliate.commissionsEarned,
+              estimatedMediaValue: existingData.estimatedMediaValue + affiliate.estimatedMediaValue
             });
           } else {
             affiliatesMap.set(affiliate.User_id, {
@@ -69,7 +71,9 @@ export default function DataVisualizer({ data, dateRange }) {
               orderVolume: affiliate.orderVolume,
               orderCount: affiliate.orderCount,
               clicks: affiliate.clicks,
+              mentions: affiliate.mentions,
               commissionsEarned: affiliate.commissionsEarned,
+              estimatedMediaValue: affiliate.estimatedMediaValue,
               profilePic: affiliate.User_image,
               firstLinked: new Date(affiliate.firstLinked)
             });

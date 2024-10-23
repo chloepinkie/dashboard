@@ -50,7 +50,7 @@ export default function AffiliateSection({ data }) {
             <Typography variant="h6">{renderValue(data.clicks)}</Typography>
           </Grid>
           <Grid item xs={4}>
-            <Typography variant="subtitle1">Ignore for now - Redo to Calc EMV for LOF</Typography>
+            <Typography variant="subtitle1">Total EMV</Typography>
             <Typography variant="h6">{renderValue(data.emv, '$')}</Typography>
           </Grid>
         </Grid>

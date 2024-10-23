@@ -7,7 +7,7 @@ const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function Settings({ onClose, onUpload }) {
+export default function AdminSettings({ onClose, onUpload }) {
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -15,6 +15,8 @@ export default function Settings({ onClose, onUpload }) {
   });
   const [isScrapingAllData, setIsScrapingAllData] = useState(false);
   const [shopMyToken, setShopMyToken] = useState('');
+  const [daysToDelete, setDaysToDelete] = useState('');
+  const [isDeletingData, setIsDeletingData] = useState(false);
 
   useEffect(() => {
     // Load the token from localStorage when the component mounts
@@ -23,6 +25,55 @@ export default function Settings({ onClose, onUpload }) {
       setShopMyToken(storedToken);
     }
   }, []);
+
+
+  const handleDaysToDeleteChange = (event) => {
+    setDaysToDelete(event.target.value);
+  };
+
+  const handleDeleteRecentData = async () => {
+    if (!daysToDelete || isNaN(daysToDelete) || daysToDelete <= 0) {
+      setSnackbar({
+        open: true,
+        message: 'Please enter a valid number of days',
+        severity: 'error'
+      });
+      return;
+    }
+
+    setIsDeletingData(true);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/scrape/delete-recent-csv-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({ days: parseInt(daysToDelete) })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete recent data');
+      }
+
+      setSnackbar({
+        open: true,
+        message: result.message,
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error deleting recent data:', error);
+      setSnackbar({
+        open: true,
+        message: `Failed to delete recent data: ${error.message}`,
+        severity: 'error'
+      });
+    } finally {
+      setIsDeletingData(false);
+    }
+  };
 
   const handleCloseSnackbar = (event, reason) => {
     if (reason === 'clickaway') {
@@ -95,7 +146,6 @@ export default function Settings({ onClose, onUpload }) {
   return (
     <Box sx={{ 
       width: '100%', 
-      maxWidth: 500, 
       bgcolor: 'background.paper', 
       borderRadius: 2, 
       p: 3 
@@ -146,6 +196,36 @@ export default function Settings({ onClose, onUpload }) {
         </Button>
       </Box>
       <Divider sx={{ mb: 3 }} />
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Delete Recent Data
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Delete the most recent CsvData entries by specifying the number of days.
+        </Typography>
+        <TextField
+          type="number"
+          fullWidth
+          variant="outlined"
+          value={daysToDelete}
+          onChange={handleDaysToDeleteChange}
+          placeholder="Enter number of days"
+          sx={{ mb: 2 }}
+        />
+        <Button
+          variant="contained"
+          onClick={handleDeleteRecentData}
+          disabled={isDeletingData}
+          color="error"
+        >
+          {isDeletingData ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            'Delete Recent Data'
+          )}
+        </Button>
+      </Box>
+      <Divider sx={{ mb: 3 }} />
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Button onClick={onClose} variant="contained" color="primary">
           Close
@@ -155,7 +235,7 @@ export default function Settings({ onClose, onUpload }) {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         sx={{
           width: '100%',
           '& .MuiSnackbarContent-root': {

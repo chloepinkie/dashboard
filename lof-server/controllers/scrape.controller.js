@@ -138,6 +138,7 @@ async function scrapeShopmyDataForAllDays(token) {
     //const token = await getShopMyToken();
     let today = new Date();
     today.setDate(today.getDate() - 1);
+    today.setHours(today.getHours() - 7);
     const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
 
     // Generate all file names and dates for the year
@@ -191,8 +192,8 @@ async function scrapeShopmyDataForAllDays(token) {
           await newCsvData.save();
           console.log(`Saved data for ${date}`);
 
-          // Wait for 15 seconds before the next iteration
-          await sleep(15000);
+          // Wait for 5 seconds before the next iteration
+          await sleep(5000);
         } else {
           console.error(`Invalid data received for date: ${date}`);
         }
@@ -205,3 +206,27 @@ async function scrapeShopmyDataForAllDays(token) {
     throw error;
   }
 }
+
+exports.deleteRecentCsvData = async (req, res) => {
+  try {
+    const { days } = req.body;
+
+    if (!days || isNaN(days) || days <= 0) {
+      return res.status(400).json({ error: 'Invalid number of days provided' });
+    }
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    const result = await CsvData.deleteMany({ date: { $gte: cutoffDate.toISOString().split('T')[0] } });
+
+    if (result.deletedCount > 0) {
+      res.json({ message: `Successfully deleted ${result.deletedCount} records from the last ${days} days.` });
+    } else {
+      res.json({ message: `No records found to delete from the last ${days} days.` });
+    }
+  } catch (error) {
+    console.error('Error deleting recent CsvData:', error);
+    res.status(500).json({ error: 'Failed to delete recent CsvData', details: error.message });
+  }
+};
