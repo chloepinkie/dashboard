@@ -9,12 +9,12 @@ export default function DateRangeSelector({ onChange }) {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const minDate = dayjs('2023-12-01');
-  const maxDate = dayjs(); // Current date
+  const maxDate = dayjs().subtract(1, 'day'); // Current date
 
   useEffect(() => {
     // Set default date range to last 7 days, but not before minDate
     const end = maxDate;
-    const start = dayjs(end.subtract(7, 'day'), minDate); // Use 6 to include today
+    const start = dayjs(end.subtract(6, 'day'), minDate); // Use 6 to include today
     setStartDate(start);
     setEndDate(end);
     onChange({ start: start.format('YYYY-MM-DD'), end: end.format('YYYY-MM-DD') });
@@ -63,7 +63,7 @@ export default function DateRangeSelector({ onChange }) {
           />
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button variant="outlined" onClick={() => handleLastNDays(7)}>Last 7 Days</Button>
+          <Button variant="outlined" onClick={() => handleLastNDays(6)}>Last 7 Days</Button>
           <Button variant="outlined" onClick={() => handleLastNDays(30)}>Last 30 Days</Button>
           <Button variant="outlined" onClick={() => handleLastNDays(90)}>Last 90 Days</Button>
         </Box>
